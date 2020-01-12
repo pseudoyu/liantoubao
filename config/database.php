@@ -13,13 +13,13 @@ return [
     // 数据库类型
     'type'            => 'mysql',
     // 服务器地址
-    'hostname'        => '127.0.0.1',
+    'hostname'        => env('DATABASE_HOST', '127.0.0.1'),
     // 数据库名
-    'database'        => 'jxh_biquan',
+    'database'        => env('DATABASE_DATABASE', 'jxh_biquan'),
     // 用户名
-    'username'        => 'root',
+    'username'        => env('DATABASE_USER', 'root'),
     // 密码
-    'password'        => '',
+    'password'        => env('DATABASE_PASSWD', ''),
     // 端口
     'hostport'        => '',
     // 连接dsn
