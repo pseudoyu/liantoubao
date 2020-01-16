@@ -3,7 +3,7 @@ namespace app\index\validate;
 
 use think\Validate;
 
-class Account extends Validate
+class Member extends Validate
 {
     protected $rule =   [
         'nick'  => 'require|max:25',
@@ -11,9 +11,9 @@ class Account extends Validate
     ];
 
     protected $message  =   [
-        'nick.require' => '名称必须',
-        'nick.max'     => '名称最多不能超过25个字符',
-        'mobile.require'   => '手机号必须',
+        'nick.require' => '昵称不能为空',
+        'nick.max'     => '昵称最多不能超过25个字符',
+        'mobile.require'   => '手机号不能为空',
         'mobile.mobile'  => '手机号格式错误',
     ];
 

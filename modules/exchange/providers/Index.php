@@ -2,7 +2,10 @@
 
 namespace mod\exchange\providers;
 
+use mod\exchange\providers\Config;
 use mod\exchange\model\Exchange as Model;
+use think\facade\Cache;
+
 // use mod\common\traits\BaseProviders;
 
 class Index
@@ -33,5 +36,13 @@ class Index
      */
     public function __construct(Model $model) {
         $this->model = $model;
+    }
+    /**
+     * 读取币种列表
+     */
+    public function getLists() {
+        return Cache::remember(Config::EXCHANGE, function () {
+            return $this->model->getList([], false)->toArray();
+        }, Config::EXPIRE);
     }
 }

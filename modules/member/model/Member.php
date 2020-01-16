@@ -75,6 +75,10 @@ class Member extends Model
     public function searchOpenIdAttr($query, $val) {
         $query->where('open_id', trim($val));
     }
+    // id筛选
+    public function searchIdAttr($query, $val) {
+        $query->where('id', trim($val));
+    }
     // 持有币种列表
     public function coins() {
         return $this->hasMany(Coins::class, 'member_id', 'id');

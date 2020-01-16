@@ -45,6 +45,28 @@ class Index
         }, Config::EXPIRE);
     }
     /**
+     * 格式化币种列表
+     */
+    public function formatLists() {
+        return Cache::remember(Config::FORMAT_COINS, function () {
+            $list = $this->getLists();
+            $character_list = [];
+            foreach ($list as $l) {
+                $character = strtoupper(substr($l['code'],0,1));
+                if( ! array_key_exists($character, $character_list)) {
+                    $character_list[$character] = [
+                        'title' => $character,
+                        'key' => $character,
+                        'items' => [],
+                    ];
+                }
+                $character_list[$character]['items'][] = $l;
+            }
+            $character_list = array_values($character_list);
+            return $character_list;
+        });
+    }
+    /**
      * 获取币当前单价
      */
     public function getPrice() {

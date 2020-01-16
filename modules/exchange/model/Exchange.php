@@ -3,18 +3,18 @@
 namespace mod\exchange\model;
 
 use think\Model;
-// use mod\common\traits\BaseModel;
+use mod\common\traits\BaseModel;
 
 class Exchange extends Model
 {
     // 引入公共库
-    //use BaseModel;
+    use BaseModel;
 
     /**
      * 默认字段
      * @var string|array
      */
-    // protected $_field = '';
+     protected $_field = 'id,code,title';
 
     /**
      * 默认排序规则
@@ -23,7 +23,7 @@ class Exchange extends Model
     // protected $_order = '';
 
     // 指定完整的表名
-    //protected $table = '';
+    protected $table = 'jxh_exchange';
 
     // 自动时间维护
     // protected $autoWriteTimestamp = true;

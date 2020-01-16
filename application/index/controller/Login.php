@@ -3,12 +3,13 @@
 namespace app\index\controller;
 
 use app\http\exception\Error;
+use think\Controller;
 use think\Request;
 use Firebase\JWT\JWT;
 use EasyWeChat\Foundation\Application;
 use mod\member\providers\Index as Members;
 
-class Login{
+class Login extends Controller {
     // 生成登陆授权连接
     public function auth() {
         $config = config('wechat.');
@@ -21,15 +22,15 @@ class Login{
     }
     // 根据用户授权code生成登陆凭证
     public function oauth_callback($code) {
-        $config = config('wechat');
+        $config = config('wechat.');
         $app = new Application($config);
         $oauth = $app->oauth;
         $wechat_user = $oauth->user();
-        if ( ! $user) {
+        if ( ! $wechat_user) {
             return wrong('微信用户信息读取失败');
         }
         $wechat_user = $wechat_user->toArray();
-        $user_info = app(Members::class)->user_info();
+        $user_info = app(Members::class)->user_info($wechat_user);
         if( ! $user_info) {
             return wrong('获取用户信息失败');
         }
@@ -38,7 +39,7 @@ class Login{
             return wrong('创建Token失败');
         }
         $user_info['token'] = $token;
-        return output($user_info);
+        $this->redirect(url('/').'#/pages/member/auth?'.http_build_query($user_info->toArray(), '' , '&'));
     }
     private function create_jwt_token($uid)
     {

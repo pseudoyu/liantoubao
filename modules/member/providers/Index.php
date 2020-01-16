@@ -2,7 +2,11 @@
 
 namespace mod\member\providers;
 
+use app\http\exception\Error;
 use mod\member\model\Member as Model;
+use think\Image;
+use think\Request;
+
 // use mod\common\traits\BaseProviders;
 
 class Index
@@ -27,6 +31,12 @@ class Index
      */
     // protected static $app_map = [];
 
+    // 头像上传文件大小限制
+    const AVATAR_SIZE = 1 * 1024 * 1024;
+    // 头像上传格式限制
+    const AVATAR_EXTS = 'jpg,png,gif';
+    // 头像上传保存目录
+    const AVATAR_SAVE = '/uploads/terrace/members';
     /**
      * Index constructor.
      * @param Model $model
@@ -35,16 +45,17 @@ class Index
         $this->model = $model;
     }
     public function user_info($wechat_user) {
-        $user_info = $this->model->getOnly(['open_id' => $wechat_user['openid']]);
+        //var_dump($wechat_user);exit;
+        $user_info = $this->model->getOnly(['open_id' => $wechat_user['id']]);
         if( ! $user_info) {
             // 保存用户头像
-            if ($wechat_user['headimgurl']) {
-                $img_result = self::download_wechat_img($wechat_user['headimgurl'], $wechat_user['openid']);
+            if ($wechat_user['avatar']) {
+                $img_result = self::download_wechat_img($wechat_user['avatar'], $wechat_user['id']);
                 $img_path = $img_result ? $img_result : '';
             }
             // 创建用户
             $user_insert = [
-                'open_id' => $wechat_user['openid'],
+                'open_id' => $wechat_user['id'],
                 'nick' => $wechat_user['nickname'],
                 'avatar' => $img_path,
                 'mobile' => 0,
@@ -53,7 +64,7 @@ class Index
                 'create_time' => time(),
             ];
             $this->model->add($user_insert);
-            $user_info = $this->model->getOnly(['open_id' => $wechat_user['openid']]);
+            $user_info = $this->model->getOnly(['open_id' => $wechat_user['id']]);
         }
         return $user_info;
     }
@@ -79,7 +90,7 @@ class Index
         if (preg_match('/^(data:\s*image\/(\w+);base64,)/', $img_content, $result)) {
             $type = $result[2];//得到图片类型png jpg gif
             //相对路径
-            $relative_path='/uploads/terrace/members';
+            $relative_path='/uploads/terrace/members/'.date('Ymd').'/';
             //绝对路径（$_SERVER['DOCUMENT_ROOT']为网站根目录）
             $absolute_path = $_SERVER['DOCUMENT_ROOT'].$relative_path;
             if(!file_exists($absolute_path)){
@@ -97,5 +108,42 @@ class Index
         }else{
             return false;
         }
+    }
+    /**
+     * 更新头像
+     * @param $id
+     * @param $file Request::file('image')
+     */
+    public function updateAvatar($id, $file) {
+        // 保存上传文件
+        $rules = [
+            'size' => self::AVATAR_SIZE,
+            'ext'  => self::AVATAR_EXTS
+        ];
+        $path = env('root_path') . '/public' . self::AVATAR_SAVE;
+        $info  = $file->move($path);
+        if ( ! $info)
+            throw new Error($info->getError());
+        $file_name = str_replace('\\', '/', $info->getSaveName());
+        // 按照原图的比例生成一个最大为200*200的缩略图并替换
+        $corp  = $path . '/' . $file_name;
+        $image = Image::open($corp);
+        $image->thumb(200, 200, Image::THUMB_CENTER)->save($corp);
+        // 更新表字段
+        $avatar = self::AVATAR_SAVE . '/' . $file_name;
+        if ( ! $this->updateInfo($id, ['avatar' => $avatar]))
+            throw new Error('头像上传失败');
+        return $avatar;
+    }
+    /**
+     * 更新字段
+     * @param $id
+     * @param $data
+     */
+    public function updateInfo($id, $data) {
+        return $this->model->modify(['id' => $id], $data);
+    }
+    public function getByUid($uid) {
+        return $this->model->getOnly(['id' => $uid]);
     }
 }

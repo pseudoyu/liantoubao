@@ -4,6 +4,8 @@ namespace mod\member\providers;
 /**
  * 会员持有币种相关业务逻辑
  */
+
+use app\http\exception\Error;
 use mod\member\model\Coins as Model;
 // use mod\common\traits\BaseProviders;
 
@@ -43,5 +45,39 @@ class Coins
         return $this->model->field('coin_id,sum(nums) as sum_nums')
                            ->group('coin_id')
                            ->select();
+    }
+    public function findOne($member_id, $coin_id) {
+        return $this->model->getOnly(['member_id' => $member_id, 'coin_id' => $coin_id]);
+    }
+    public function update($data) {
+        // 检查是否存在
+        $coin_info = $this->model->getOnly(['member_id' => $data['member_id'], 'coin_id' => $data['coin_id']]);
+        if ( ! $coin_info) {
+            $insert_info = [
+                'member_id' => $data['member_id'],
+                'coin_id' => $data['coin_id'],
+                'nums' => $data['nums'],
+                'costs' => $data['unit_price'] * $data['nums'],
+            ];
+            return $this->model->add($insert_info);
+        }
+        if($data['act'] == 1) {
+            $modify_info = [
+                'nums' => $coin_info['nums'] + $data['nums'],
+                'costs' => $coin_info['costs'] + $data['unit_price'] * $data['nums'],
+            ];
+        } else {
+            $modify_info = [
+                'nums' => $coin_info['nums'] - $data['nums'],
+                'costs' => $coin_info['costs'] - $data['unit_price'] * $data['nums'],
+            ];
+            if($modify_info['nums'] < 0) {
+                throw new Error('数据错误');
+            }
+        }
+        return $this->model->modify(['id' => $coin_info['id']], $modify_info);
+    }
+    public function update_limit($member_id, $coin_id, $value) {
+        return $this->model->modify(['member_id' => $member_id, 'coin_id' => $coin_id], $value);
     }
 }

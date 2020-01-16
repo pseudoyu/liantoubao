@@ -1,37 +1,30 @@
 <?php
 namespace app\index\controller;
 
+use mod\member\providers\Follow;
 use think\Request;
 use mod\member\providers\Index as Provider;
-use mod\admin\providers\Common;
 class Member {
     protected $provider;
     protected $admin_id;
     public function __construct(Provider $account) {
         $this->provider = $account;
-        $this->admin_id = Common::session('id');
     }
     /**
      * 其余帐号相关操作
      * @return \think\Response
      */
-    public function index(Request $request, $actions) {
-        $actions = strtolower($actions);
-        if ( ! in_array($actions, ['username', 'nick', 'mobile']))
-            return wrong('非法的修改操作');
-        $data = [$actions => $request->put('context', '')];
-        return $this->provider->updateInfo($this->admin_id, $data, $actions)
+    public function update(Request $request) {
+        $data = [
+            'mobile' => $request->mobile,
+            'nick' => $request->nick,
+        ];
+        $validate = new \app\index\validate\Member;
+        if (!$validate->check($data)) {
+            return wrong($validate->getError());
+        }
+        return $this->provider->updateInfo($request->uid, $data)
             ? complete('修改成功') : wrong('修改失败');
-    }
-    /**
-     * 修改登陆密码
-     * @param  \think\Request $request
-     * @return \think\Response
-     */
-    public function passwd(Request $request) {
-        $put = $request->only(['passwd' => '', 'new_passwd' => '', 'repeat_passwd' => ''], 'put');
-        return $this->provider->updatePasswd($this->admin_id, $put)
-            ? complete('登陆密码修改成功') : wrong('登陆密码修改失败');
     }
     /**
      * 上传新的头像
@@ -40,7 +33,40 @@ class Member {
      */
     public function avatar(Request $request) {
         $file   = $request->file('file');
-        $avatar = $this->provider->updateAvatar($this->admin_id, $file);
+        if (! $file) {
+            return wrong('图片不能为空');
+        }
+        $avatar = $this->provider->updateAvatar($request->uid, $file);
         return complete('头像上传成功', 200, '', compact('avatar'));
+    }
+    public function follow_member(Request $request) {
+        $object_id = $request->object_id;
+        if( ! $object_id) {
+            return wrong('参数错误');
+        }
+        $uid = $request->uid;
+        $object_info = $this->provider->getByUid($object_id);
+        if ( ! $object_info) {
+            return wrong('关注对象不存在');
+        }
+        // 检查是否是会员
+        $user_info = $this->provider->getByUid($uid);
+        if ($user_info['viper'] < 1) {
+            return wrong('无权限');
+        } else {
+            if($user_info['vip_expire'] > 0 && $user_info['vip_expire'] < time()) {
+                return wrong('无权限');
+            }
+        }
+        // 关注
+        return app(Follow::class)->follow($uid, $object_id) ? complete('关注成功') : wrong('关注失败');
+    }
+    public function cancel_follow(Request $request) {
+        $object_id = $request->object_id;
+        if( ! $object_id) {
+            return wrong('参数错误');
+        }
+        // 关注
+        return app(Follow::class)->cancel_follow($request->uid, $object_id) ? complete('取消成功') : wrong('取消失败');
     }
 }

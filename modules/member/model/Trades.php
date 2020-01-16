@@ -3,12 +3,12 @@
 namespace mod\member\model;
 
 use think\Model;
-// use mod\common\traits\BaseModel;
+use mod\common\traits\BaseModel;
 
 class Trades extends Model
 {
     // 引入公共库
-    //use BaseModel;
+    use BaseModel;
 
     /**
      * 默认字段
@@ -20,7 +20,7 @@ class Trades extends Model
      * 默认排序规则
      * @var string
      */
-    // protected $_order = '';
+    protected $_order = 'id desc';
 
     // 指定完整的表名
     protected $table = 'jxh_member_trades';
@@ -39,5 +39,20 @@ class Trades extends Model
      * @var false|string
      */
     // protected $updateTime = 'update_time';
-
+    // 会员ID筛选
+    public function searchMemberIdAttr($query, $val) {
+        $query->where('member_id', trim($val));
+    }
+    public function searchCoinIdAttr($query, $val) {
+        $query->where('coin_id', trim($val));
+    }
+    public function searchActAttr($query, $val) {
+        $query->where('act', trim($val));
+    }
+    public function searchIdAttr($query, $val) {
+        $query->where('id', trim($val));
+    }
+    public function searchCreateTimeAttr($query, $val) {
+        $query->where('create_time','>', trim($val['start_time']))->where('create_time','<', trim($val['end_time']));
+    }
 }

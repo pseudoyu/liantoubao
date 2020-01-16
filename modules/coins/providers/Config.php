@@ -7,6 +7,8 @@ namespace mod\coins\providers;
 class Config {
     // 币种列表缓存键名
     const COINS = 'coins';
+    // 币种列表格式化缓存键名
+    const FORMAT_COINS = 'format_coins';
     // 缓存有效时间，单位：秒
     const EXPIRE = 300;
     // 币种最新报价
