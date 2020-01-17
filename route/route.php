@@ -9,6 +9,8 @@ Route::group('wxapi', function () {
     Route::group('ws', function () {
         // 币种列表
         Route::get('coins', 'index/common/coins');
+        // 单币曲线
+        Route::get('single_coin', 'index/common/single_coin');
         // 格式化币种列表
         Route::get('format_coins', 'index/common/format_coins');
         // 币种即时报价
@@ -41,8 +43,9 @@ Route::group('wxapi', function () {
             Route::get('follow_member', 'index/member/follow_member');
             // 取消关注
             Route::get('cancel_follow', 'index/member/cancel_follow');
-            // 用户持币列表
-            
+            // 关注列表
+            Route::get('follow_list', 'index/member/follow_list');
+
         });
         Route::group('trades',function() {
             // 新增交易
@@ -51,12 +54,22 @@ Route::group('wxapi', function () {
             Route::get('info', 'index/trade/info');
             // 交易列表
             Route::get('list', 'index/trade/lists');
+            // 单币交易列表
+            Route::get('coin_trade_list', 'index/trade/coin_trade_list');
             // 更新阈值
-            Route::get('update_limit', 'index/trade/update_limit');
+            Route::post('update_limit', 'index/trade/update_limit');
             // 单币详情
-            Route::get('coin_count', 'index/trade/coin_count');
-            // 收益率
-            Route::get('xirr', 'index/trade/calc_xirr');
+            Route::get('single_coin_info', 'index/trade/single_coin_info');
+            // 持币比例
+            Route::get('has_coin_percent', 'index/trade/has_coin_percent');
+            // 我的货币
+            Route::get('my_coin', 'index/trade/my_coin');
+            // 我的钱包（收入）
+            Route::get('my_income', 'index/trade/my_income');
+            // 排名缓存
+            Route::get('rank_cache', 'index/trade/rank_cache');
+            // 排行榜
+            Route::get('top_rank', 'index/trade/top_rank');
         });
     })->middleware('MemberLogin');
 

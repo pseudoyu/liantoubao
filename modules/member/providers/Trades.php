@@ -46,6 +46,28 @@ class Trades
         $field = 'id, coin_id, nums, unit_price, act, exchange_id, create_time';
         return $this->model->getListForPage($condition, 15, $field, 'id desc');
     }
+    // 计算单币收益数据
+    public function calcCoinIncome($coin_id) {
+        // 计算当前币种的价值
+        // 获取当前币种的钱包信息
+
+    }
+    // 计算总收益率
+    public function calcIncomeRate() {
+
+    }
+    // 计算累积收益
+    public function calcAccumulateIncome() {
+
+    }
+    // 计算持有收益
+    public function calcHavingIncome() {
+
+    }
+    // 计算卖出收益
+    public function calcSellIncome() {
+
+    }
     public function calcXirr() {
         $list = array(
             ['stringTime'=>'2019-01-01','payment'=>-100.00],

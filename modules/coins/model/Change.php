@@ -39,5 +39,7 @@ class Change extends Model
      * @var false|string
      */
     // protected $updateTime = 'update_time';
-
+    public function searchTimerAttr($query, $val) {
+        $query->where('timer','>', trim($val));
+    }
 }

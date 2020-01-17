@@ -57,4 +57,14 @@ class Follow
     public function cancel_follow($uid, $object_id) {
         return $this->model->del(['member_id' => $uid, 'object_id' => $object_id]);
     }
+    public function is_follow($member_id, $object_id) {
+        $is_follow = $this->model->getCount(['member_id' => $member_id, 'object_id' => $object_id]);
+        if($is_follow > 0) {
+            return true;
+        }
+        return false;
+    }
+    public function follow_list($member_id) {
+        return $this->model->getList(['member_id' => $member_id], false);
+    }
 }

@@ -32,9 +32,11 @@ class Index
     // protected static $app_map = [];
 
     // 头像上传文件大小限制
-    const AVATAR_SIZE = 1 * 1024 * 1024;
+    const AVATAR_SIZE = 10 * 1024 * 1024;
     // 头像上传格式限制
     const AVATAR_EXTS = 'jpg,png,gif';
+    // 头像上传mime格式限制
+    const AVATAR_TYPE = 'image/jpg,image/jpeg,image/png,image/gif';
     // 头像上传保存目录
     const AVATAR_SAVE = '/uploads/terrace/members';
     /**
@@ -118,12 +120,18 @@ class Index
         // 保存上传文件
         $rules = [
             'size' => self::AVATAR_SIZE,
-            'ext'  => self::AVATAR_EXTS
+            // 'ext'  => self::AVATAR_EXTS,
+            'type' => self::AVATAR_TYPE
         ];
-        $path = env('root_path') . '/public' . self::AVATAR_SAVE;
-        $info  = $file->move($path);
+        $path = env('root_path') . 'public' . self::AVATAR_SAVE;
+        // 生成文件名
+        $date = date('Ymd', $_SERVER['REQUEST_TIME']) . '/';
+        $ext  = substr(strrchr($file->getInfo('type'), '/'), 1);
+        $ext === 'jpeg' && $ext = 'jpg';
+        $file_name = $date . rand_str(32) . '.' . $ext;
+        $info  = $file->validate($rules)->move($path, $file_name);
         if ( ! $info)
-            throw new Error($info->getError());
+            throw new Error($file->getError());
         $file_name = str_replace('\\', '/', $info->getSaveName());
         // 按照原图的比例生成一个最大为200*200的缩略图并替换
         $corp  = $path . '/' . $file_name;
@@ -145,5 +153,8 @@ class Index
     }
     public function getByUid($uid) {
         return $this->model->getOnly(['id' => $uid]);
+    }
+    public function getAll() {
+        return $this->model->getList([], false)->toArray();
     }
 }

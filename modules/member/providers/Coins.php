@@ -46,18 +46,32 @@ class Coins
                            ->group('coin_id')
                            ->select();
     }
+    public function allCoin() {
+        return $this->model->field('*')
+            ->group('coin_id')
+            ->select();
+    }
     public function findOne($member_id, $coin_id) {
         return $this->model->getOnly(['member_id' => $member_id, 'coin_id' => $coin_id]);
+    }
+    public function  findByUid($member_id) {
+        return $this->model->where(['member_id' => $member_id])->select();
     }
     public function update($data) {
         // 检查是否存在
         $coin_info = $this->model->getOnly(['member_id' => $data['member_id'], 'coin_id' => $data['coin_id']]);
         if ( ! $coin_info) {
+            if($data['act'] == 2) {
+                throw new Error('数据异常');
+            }
             $insert_info = [
                 'member_id' => $data['member_id'],
                 'coin_id' => $data['coin_id'],
                 'nums' => $data['nums'],
                 'costs' => $data['unit_price'] * $data['nums'],
+                'buy_number' => $data['nums'],
+                'sell_number' => 0,
+                'sell_income' => 0,
             ];
             return $this->model->add($insert_info);
         }
@@ -65,11 +79,13 @@ class Coins
             $modify_info = [
                 'nums' => $coin_info['nums'] + $data['nums'],
                 'costs' => $coin_info['costs'] + $data['unit_price'] * $data['nums'],
+                'buy_number' => $coin_info['buy_number'] + $data['nums'],
             ];
         } else {
             $modify_info = [
                 'nums' => $coin_info['nums'] - $data['nums'],
-                'costs' => $coin_info['costs'] - $data['unit_price'] * $data['nums'],
+                'sell_income' => $coin_info['sell_income'] + $data['unit_price'] * $data['nums'],
+                'sell_number' => $coin_info['sell_number'] + $data['nums'],
             ];
             if($modify_info['nums'] < 0) {
                 throw new Error('数据错误');

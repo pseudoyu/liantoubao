@@ -74,4 +74,14 @@ class Index
             return Change::group('id')->order('timer desc')->column('unit_price', 'id');
         //});
     }
+    public function getCoinPrice($coin_id) {
+        $price = Change::order('timer desc')->find(['id' => $coin_id]);
+        if( $price) {
+            return $price['unit_price'];
+        }
+        return 0;
+    }
+    public function getCoinPriceList($coin_id) {
+        return Change::where('id',$coin_id)->where('timer','>',time() - 60 * 60 * 6)->select();
+    }
 }

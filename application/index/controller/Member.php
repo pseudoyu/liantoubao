@@ -2,6 +2,7 @@
 namespace app\index\controller;
 
 use mod\member\providers\Follow;
+use think\facade\Cache;
 use think\Request;
 use mod\member\providers\Index as Provider;
 class Member {
@@ -15,10 +16,8 @@ class Member {
      * @return \think\Response
      */
     public function update(Request $request) {
-        $data = [
-            'mobile' => $request->mobile,
-            'nick' => $request->nick,
-        ];
+        //简写
+        $data = $request->only(['mobile' => '', 'nick' => ''], 'put');
         $validate = new \app\index\validate\Member;
         if (!$validate->check($data)) {
             return wrong($validate->getError());
@@ -68,5 +67,20 @@ class Member {
         }
         // 关注
         return app(Follow::class)->cancel_follow($request->uid, $object_id) ? complete('取消成功') : wrong('取消失败');
+    }
+    public function follow_list(Request $request) {
+        $list = app(Follow::class)->follow_list($request->uid);
+        if( ! $list) {
+            return output([]);
+        }
+        $rank_list = Cache::get('coin_rank');
+        if ( !$rank_list) {
+            return wrong('排行榜数据异常');
+        }
+        $follow = [];
+        foreach ($list as $l) {
+            $follow[] = $rank_list['data'][$l['object_id']];
+        }
+        return output($follow);
     }
 }
