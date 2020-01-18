@@ -76,6 +76,32 @@ class CoinMarketCap {
                         $data = [];
                         foreach ($context['data'] as $key=>$quote) {
                             $id = $coin_ids[array_search($key, $symbols)];
+                            // 24H最大值
+                            if (Cache::get('coin_24h_max_'.$id) ) {
+                                if($unit_price > Cache::get('coin_24h_max_'.$id)) {
+                                    Cache::set('coin_24h_max_'.$id, $unit_price, 24 * 60 * 60 );
+                                }
+                            } else {
+                                // 初始化最大值
+                                $max_price = app(Index::class)->getOneCoinMaxPrice($id);
+                                if($max_price) {
+                                    Cache::set('coin_24h_max_'.$id, $max_price['unit_price'], 24 * 60 * 60 );
+                                }
+                            }
+                            // 24H最小值
+                            if (Cache::get('coin_24h_min_'.$id) ) {
+                                if($unit_price > Cache::get('coin_24h_min_'.$id)) {
+                                    Cache::set('coin_24h_min_'.$id, $unit_price, 24 * 60 * 60 );
+                                }
+                            } else {
+                                // 初始化最小值
+                                $min_price = app(Index::class)->getOneCoinMinPrice($id);
+                                if($min_price) {
+                                    Cache::set('coin_24h_min_'.$id, $min_price['unit_price'], 24 * 60 * 60 );
+                                }
+                            }
+                            // 初始化单币最新值
+                            Cache::set('coin_new_'.$id, $unit_price);
                             $unit_price = $quote['quote']['USD']['price'];
                             array_push($data, compact('id', 'timer', 'unit_price'));
                         }

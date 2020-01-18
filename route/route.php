@@ -7,26 +7,32 @@ Route::group('wxapi', function () {
     Route::get('/', '');
 
     Route::group('ws', function () {
-        // 币种列表
+        // √ 币种列表
         Route::get('coins', 'index/common/coins');
-        // 单币曲线
+        // √ 单币曲线
         Route::get('single_coin', 'index/common/single_coin');
-        // 格式化币种列表
+        // √ 单币涨跌信息
+        Route::get('coin_info', 'index/common/coin_info');
+        // √ 热力图
+        Route::get('heat_map', 'index/common/heat_map');
+        // √ 格式化币种列表
         Route::get('format_coins', 'index/common/format_coins');
-        // 币种即时报价
+        // √ 币种即时报价
         Route::get('quotes', 'index/common/quotes');
-        // 交易所列表
+        // √ 交易所列表
         Route::get('exchange', 'index/common/exchange');
+        // √ 排行榜
+        Route::get('top_rank', 'index/trade/top_rank');
     });
 
     Route::group('system', function () {
-        // 关于我们
+        // √ 关于我们
         Route::get('about', 'index/about/read');
     });
     Route::group('login', function () {
-        // 获取微信授权
+        // √ 获取微信授权
         Route::get('auth', 'index/login/auth');
-        // 授权成功之后回跳地址
+        // √ 授权成功之后回跳地址
         Route::get('oauth_callback', 'index/login/oauth_callback');
         // 过期登陆token刷新
         //Route::post('refresh', 'index/login/refresh');
@@ -35,41 +41,42 @@ Route::group('wxapi', function () {
     Route::get('ranking', '');
     Route::group('', function () {
         Route::group('member',function() {
-            // 更新用户信息
+            // √ 更新用户信息
             Route::post('update', 'index/member/update');
-            // 更新头像
+            // √ 更新头像
             Route::post('avatar', 'index/member/avatar');
-            // 关注用户
+            // √ 关注用户
             Route::get('follow_member', 'index/member/follow_member');
             // 取消关注
             Route::get('cancel_follow', 'index/member/cancel_follow');
-            // 关注列表
+            // √ 关注列表
             Route::get('follow_list', 'index/member/follow_list');
 
         });
         Route::group('trades',function() {
-            // 新增交易
+            // √ 新增交易
             Route::post('add', 'index/trade/add');
-            // 交易详情
+            // √ 交易详情
             Route::get('info', 'index/trade/info');
-            // 交易列表
+            // √ 交易列表
             Route::get('list', 'index/trade/lists');
-            // 单币交易列表
+            // √ 单币交易列表
             Route::get('coin_trade_list', 'index/trade/coin_trade_list');
-            // 更新阈值
+            // √ 更新阈值
             Route::post('update_limit', 'index/trade/update_limit');
-            // 单币详情
+            // √ 单币详情
             Route::get('single_coin_info', 'index/trade/single_coin_info');
             // 持币比例
             Route::get('has_coin_percent', 'index/trade/has_coin_percent');
-            // 我的货币
+            // √ 我的货币
             Route::get('my_coin', 'index/trade/my_coin');
             // 我的钱包（收入）
             Route::get('my_income', 'index/trade/my_income');
+            // 我的钱包（时间筛选）
+            Route::get('my_income_time', 'index/trade/my_income_time');
             // 排名缓存
             Route::get('rank_cache', 'index/trade/rank_cache');
-            // 排行榜
-            Route::get('top_rank', 'index/trade/top_rank');
+
         });
     })->middleware('MemberLogin');
 

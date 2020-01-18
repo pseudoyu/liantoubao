@@ -48,7 +48,7 @@ class Index
      * 格式化币种列表
      */
     public function formatLists() {
-        return Cache::remember(Config::FORMAT_COINS, function () {
+         return Cache::remember(Config::FORMAT_COINS, function () {
             $list = $this->getLists();
             $character_list = [];
             foreach ($list as $l) {
@@ -62,9 +62,10 @@ class Index
                 }
                 $character_list[$character]['items'][] = $l;
             }
+            ksort($character_list);
             $character_list = array_values($character_list);
             return $character_list;
-        });
+         });
     }
     /**
      * 获取币当前单价
@@ -75,13 +76,26 @@ class Index
         //});
     }
     public function getCoinPrice($coin_id) {
+        if(Cache::get('coin_new_'.$coin_id)) {
+            return Cache::get('coin_new_'.$coin_id);
+        }
         $price = Change::order('timer desc')->find(['id' => $coin_id]);
         if( $price) {
+            Cache::set('coin_new_'.$coin_id, $price['unit_price'], 600);
             return $price['unit_price'];
         }
         return 0;
     }
     public function getCoinPriceList($coin_id) {
         return Change::where('id',$coin_id)->where('timer','>',time() - 60 * 60 * 6)->select();
+    }
+    public function getOneCoinMaxPrice($coin_id) {
+        return Change::where('id',$coin_id)->where('timer','>',time() - 60 * 60 * 24)->order('unit_price desc')->find();
+    }
+    public function getOneCoinMinPrice($coin_id) {
+        return Change::where('id',$coin_id)->where('timer','>',time() - 60 * 60 * 24)->order('unit_price asc')->find();
+    }
+    public function getOneCoinFirstPrice($coin_id) {
+        return Change::where('id',$coin_id)->where('timer','>',strtotime(date('Y-m-d')))->order('timer asc')->find();
     }
 }

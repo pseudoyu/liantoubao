@@ -9,6 +9,8 @@ use think\Request;
 use mod\member\providers\Coins as MemberCoins;
 use mod\member\providers\Trades as Provider;
 use mod\admin\providers\Common;
+use function GuzzleHttp\Psr7\str;
+
 class Trade {
     protected $provider;
     public function __construct(Provider $trades) {
@@ -121,7 +123,7 @@ class Trade {
                 'end_time' => time(),
             ]
         ];
-        $info = $this->provider->getLists($condition);
+        $info = $this->provider->getList($condition);
         return output($info);
     }
     public function update_limit(Request $request) {
@@ -318,5 +320,70 @@ class Trade {
             }
         }
         return output($coin_percent);
+    }
+    public function my_income_time(Request $request) {
+        $time_array = ['month', 'season', 'half', 'year'];
+            $time = $request->search_time;
+        if( ! $time || ! in_array($time, $time_array)) {
+            return wrong('参数错误');
+        }
+        if($time == 'month') {
+            $start_time = date('Y-m');
+        }
+        if($time == 'season') {
+            $month = (ceil(date('m') / 3) - 1) * 3 + 1;
+            $start_time = date('Y-'.$month);
+        }
+        if($time == 'half') {
+            $month = (ceil(date('m') / 6) - 1) * 6 + 1;
+            $start_time = date('Y-'.$month);
+        }
+        if($time == 'year') {
+            $start_time = date('Y-1');
+        }
+        $start = strtotime($start_time);
+        // 读取所有交易
+        $trade_list = [];
+        if( ! $trade_list) {
+            return output([]);
+        }
+        $trade_calc = [];
+        // 初始化持币数组
+        $has_coin = [];
+        foreach ($trade_list as $trade) {
+            //发生在统计日前的交易
+            if($trade['create_time'] < $start || $trade['create_time'] = $start) {
+                // 统计币种剩余数量
+                $has_coin = [
+
+                ];
+            } else {
+                // 需要进行基金净值法计算的数据
+                $trade_calc[] = $trade;
+            }
+        }
+        //初始化资金
+        $init_income = 0;
+        // 计算统计日初始资金
+        foreach ($has_coin as $coin) {
+            // 获取币种当时价格
+            //$coin['coin_id'];
+            // 计入统计
+            $init_income += $coin['number'] * $unit_price;
+        }
+        // 对需要进行计算的数据进行排序，按时间从小到大
+        $trade_calc = array_multisort($trade_calc);
+
+        // 初始化净值
+        $init_net_value = 1;
+        // 初始化持有数量
+        $init_number = $init_income;
+        foreach ($trade_calc as $t_c){
+            // 计算发生交易前的净值
+            // 计算发生交易后的持有数量
+        }
+        // 获取现有币种现价
+        // 计算当前净值
+        // 计算持有收益
     }
 }

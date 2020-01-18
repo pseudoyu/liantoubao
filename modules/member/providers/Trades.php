@@ -46,6 +46,10 @@ class Trades
         $field = 'id, coin_id, nums, unit_price, act, exchange_id, create_time';
         return $this->model->getListForPage($condition, 15, $field, 'id desc');
     }
+    public function getList($condition) {
+        $field = 'id, coin_id, nums, unit_price, act, exchange_id, create_time';
+        return $this->model->getList($condition, false, $field, 'create_time asc');
+    }
     // 计算单币收益数据
     public function calcCoinIncome($coin_id) {
         // 计算当前币种的价值
