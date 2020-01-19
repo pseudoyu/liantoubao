@@ -47,7 +47,7 @@ Route::group('wxapi', function () {
             Route::post('avatar', 'index/member/avatar');
             // √ 关注用户
             Route::get('follow_member', 'index/member/follow_member');
-            // 取消关注
+            // √ 取消关注
             Route::get('cancel_follow', 'index/member/cancel_follow');
             // √ 关注列表
             Route::get('follow_list', 'index/member/follow_list');
