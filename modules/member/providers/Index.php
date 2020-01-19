@@ -94,7 +94,7 @@ class Index
             //相对路径
             $relative_path='/uploads/terrace/members/'.date('Ymd').'/';
             //绝对路径（$_SERVER['DOCUMENT_ROOT']为网站根目录）
-            $absolute_path = rtrim(env('root_path'), '/') . $relative_path;
+            $absolute_path = env('root_path') .'/public'. $relative_path;
             if(!file_exists($absolute_path)){
                 //检查是否有该文件夹，如果没有就创建，并给予最高权限
                 mkdir($absolute_path, 0700, true);
