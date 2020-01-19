@@ -71,9 +71,9 @@ class Index
      * 获取币当前单价
      */
     public function getPrice() {
-        //return Cache::remember(Config::CoinQuote, function () {
-            return Change::group('id')->order('timer desc')->column('unit_price', 'id');
-        //});
+        return Cache::remember(Config::CoinQuote, function () {
+            return Change::order('timer desc')->group('id')->column('unit_price', 'id');
+        });
     }
     public function getCoinPrice($coin_id) {
         if(Cache::get('coin_new_'.$coin_id)) {
