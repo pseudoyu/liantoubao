@@ -6,6 +6,7 @@ namespace mod\coins\service;
  */
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use think\exception\ErrorException;
 use think\facade\Cache;
 use mod\coins\providers\Index;
 use mod\coins\model\Change;
@@ -76,6 +77,10 @@ class CoinMarketCap {
                         $data = [];
                         foreach ($context['data'] as $key=>$quote) {
                             $id = $coin_ids[array_search($key, $symbols)];
+                            // 初始化单币最新值
+                            $unit_price = $quote['quote']['USD']['price'];
+                            Cache::set('coin_new_'.$id, $unit_price);
+                            array_push($data, compact('id', 'timer', 'unit_price'));
                             // 24H最大值
                             if (Cache::get('coin_24h_max_'.$id) ) {
                                 if($unit_price > Cache::get('coin_24h_max_'.$id)) {
@@ -100,10 +105,6 @@ class CoinMarketCap {
                                     Cache::set('coin_24h_min_'.$id, $min_price['unit_price'], 24 * 60 * 60 );
                                 }
                             }
-                            // 初始化单币最新值
-                            Cache::set('coin_new_'.$id, $unit_price);
-                            $unit_price = $quote['quote']['USD']['price'];
-                            array_push($data, compact('id', 'timer', 'unit_price'));
                         }
                         // 写入数据库
                         (new Change)->saveAll($data, false);
@@ -115,10 +116,23 @@ class CoinMarketCap {
                     }
                 }
             } catch (RequestException $e) {
-                return $e->getMessage();
+                return $this->formatError($e);
+            } catch (ErrorException $e) {
+                return $this->formatError($e);
             }
         } else {
             return '没有设置币种';
         }
+    }
+    /**
+     * 格式化错误输出
+     */
+    protected function formatError($e) {
+        return sprintf(
+            "\n\n  Error: %s\n  Line: %d\n  File: %s\n",
+            $e->getMessage(),
+            $e->getLine(),
+            $e->getFile()
+        );
     }
 }
