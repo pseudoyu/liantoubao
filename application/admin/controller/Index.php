@@ -23,7 +23,8 @@ class Index {
      */
     public function send_check(Request $request) {
         $mobile = $request->put('mobile', '');
-        return $this->provider->send_check($mobile) ? complete('success') : wrong('fail');
+        return $this->provider->send_check($mobile)
+            ? complete('短信验证码已发送至手机 ' . $mobile) : wrong('fail');
     }
     /**
      * 发送密码重置成功短信
@@ -32,7 +33,7 @@ class Index {
     public function retrieve(Request $request) {
         $put = $request->only(['mobile' => '', 'code' => ''], 'put');
         return $this->provider->retrieve($put['mobile'], $put['code'])
-            ? complete('success') : wrong('fail');
+            ? complete('密码重置成功，新密码已发送至手机 ' . $put['mobile']) : wrong('密码重置失败');
     }
     // 注销登陆
     public function login_out() {

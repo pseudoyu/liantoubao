@@ -6,15 +6,25 @@ use mod\coins\providers\Index;
 use think\Controller;
 use mod\coins\providers\Index as Coins;
 use mod\exchange\providers\Index as Exchange;
+use mod\money\providers\Money;
 use think\facade\Cache;
 use think\Request;
 
 class Common extends Controller
 {
-    // 读取币种列表
-    public function coins() {
-        return output(app(Coins::class)->getLists());
+    // 前端公共整合数据
+    public function common() {
+        $provider = app(Coins::class);
+        $coins = $provider->getLists();
+        $format_coins = $provider->formatLists();
+        $exchange = app(Exchange::class)->getLists();
+        $rate = app(Money::class)->quotes();
+        return output(compact('coins', 'format_coins', 'exchange', 'rate'));
     }
+    // 读取币种列表
+    /*public function coins() {
+        return output(app(Coins::class)->getLists());
+    }*/
     // 读取单币报价列表
     public function single_coin(Request $request) {
         if( ! $request->coin_id) {
@@ -24,17 +34,17 @@ class Common extends Controller
         return output($data ? $data : []);
     }
     // 读取币种格式化列表
-    public function format_coins() {
+    /*public function format_coins() {
         return output(app(Coins::class)->formatLists());
-    }
+    }*/
     // 读取币种即时报价
     public function quotes() {
         return output(app(Coins::class)->getPrice());
     }
     // 读取交易所列表
-    public function exchange() {
+    /*public function exchange() {
         return output(app(Exchange::class)->getLists());
-    }
+    }*/
     // 读取单币特征值
     public function coin_info(Request $request) {
         $id = $request->coin_id;

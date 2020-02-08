@@ -16,6 +16,8 @@ Route::group('admin', function () {
         Route::get('dashboard', 'admin/common/dashboard');
         // 获取币种汇总列表
         Route::get('coins', 'admin/common/coins');
+        // 获取币种最新的报价信息
+        Route::get('quotes', 'admin/common/quotes');
         // 用户管理
         Route::group('member', function () {
             // 首页统计
@@ -26,18 +28,23 @@ Route::group('admin', function () {
             Route::get('', 'admin/member/index');
         });
         // 支付记录
-        Route::get('payment', function () {
+        Route::group('payment', function () {
             // 指定用户支付记录
             Route::get('<id>', 'admin/payment/member')->pattern(['id' => '\d+']);
             // 总支付记录
             Route::get('', 'admin/payment/index');
         });
         // 会员规则配置
-        Route::group('viper', function () {
-            Route::post('create', 'admin/viper/save');
-            Route::post('update', 'admin/viper/update');
-            Route::post('delete', 'admin/viper/delete');
-            Route::get('', 'admin/viper/index');
+        // Route::group('viper', function () {
+        //     Route::post('create', 'admin/viper/save');
+        //     Route::post('update', 'admin/viper/update');
+        //     Route::post('delete', 'admin/viper/delete');
+        //     Route::get('', 'admin/viper/index');
+        // });
+        // 服务项目配置
+        Route::group('services', function () {
+            Route::post('update/<id>', 'admin/services/update');
+            Route::get('<id>', 'admin/services/index');
         });
         // 帐号设置
         Route::group('account', function () {
@@ -53,9 +60,12 @@ Route::group('admin', function () {
         // 平台介绍管理
         Route::group('about', function () {
             // 获取
-            Route::get('', 'admin/about/read');
+            Route::get('<id>', 'admin/about/read');
             // 保存
-            Route::post('', 'admin/about/update');
+            Route::post('<id>', 'admin/about/update');
+        });
+        Route::group('upload', function () {
+            Route::post('editor', 'admin/upload/editor');
         });
     })->middleware('AdminAuth');
 });

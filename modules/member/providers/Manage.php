@@ -42,13 +42,13 @@ class Manage
     // 用户相关统计
     public function dashboard() {
         $member  = $this->app('stats')->length();
-        $payment = $this->app('payment')->income();
+        // $payment = $this->app('payment')->income();
         $coins   = $this->app('coins')->property();
-        return compact('member', 'payment', 'coins');
+        return compact('member', /*'payment', */'coins');
     }
     // 用户列表
     public function getListForPage($args, $limit = 18) {
-        $rows = $this->model->getListForPage($args, $limit, 'id,mobile,viper');
+        $rows = $this->model->getListForPage($args, $limit, 'id,nick,mobile,viper');
         if ( ! $rows->isEmpty())
             $rows->load('coins');
         return $rows;

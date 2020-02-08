@@ -14,5 +14,6 @@ return [
     'mod:make:providers'  => 'mod\command\make\Providers',
     'mod:make:validate'   => 'mod\command\make\Validate',
     'crontab:coin:map'    => 'mod\coins\crontab\Map',
-    'crontab:coin:quotes' => 'mod\coins\crontab\Quotes'
+    'crontab:coin:quotes' => 'mod\coins\crontab\Quotes',
+    'crontab:money:rate'  => 'mod\money\crontab\Rate'
 ];

@@ -25,6 +25,13 @@ class Member {
         return $this->provider->updateInfo($request->uid, $data)
             ? complete('修改成功') : wrong('修改失败');
     }
+    // 设置货币类型
+    public function update_coin(Request $request) {
+        $coin = strtoupper($request->put('coin', 'usd'));
+        $coin = in_array($coin, ['USD', 'CNY']) === false ? 'USD' : $coin;
+        return $this->provider->updateInfo($request->uid, compact('coin'))
+            ? complete('修改成功') : wrong('修改失败');
+    }
     /**
      * 上传新的头像
      * @param  \think\Request $request

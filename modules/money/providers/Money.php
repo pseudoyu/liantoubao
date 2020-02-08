@@ -1,11 +1,11 @@
 <?php
 
-namespace mod\viper\providers;
+namespace mod\money\providers;
 
-use mod\viper\model\Viper as Model;
+use mod\money\model\Money as Model;
 // use mod\common\traits\BaseProviders;
 
-class Index
+class Money
 {
     // 引入公共库
     // use BaseProviders;
@@ -28,10 +28,14 @@ class Index
     // protected static $app_map = [];
 
     /**
-     * Index constructor.
+     * Money constructor.
      * @param Model $model
      */
     public function __construct(Model $model) {
         $this->model = $model;
+    }
+    // 获取最新的利率
+    public function quotes() {
+        return $this->model->field('code,price')->order('timer desc')->group('code')->column('price', 'code');
     }
 }

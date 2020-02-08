@@ -42,7 +42,7 @@ class Coins
      * 统计所有用户持有资产统计
      */
     public function property() {
-        return $this->model->field('coin_id,sum(nums) as sum_nums')
+        return $this->model->field('coin_id,sum(nums) as sum_nums, sum(costs) as sum_costs')
                            ->group('coin_id')
                            ->select();
     }

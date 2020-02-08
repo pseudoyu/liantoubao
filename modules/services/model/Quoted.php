@@ -1,11 +1,11 @@
 <?php
 
-namespace mod\viper\model;
+namespace mod\services\model;
 
 use think\Model;
 // use mod\common\traits\BaseModel;
 
-class Viper extends Model
+class Quoted extends Model
 {
     // 引入公共库
     //use BaseModel;
@@ -14,16 +14,16 @@ class Viper extends Model
      * 默认字段
      * @var string|array
      */
-    // protected $_field = '';
+    protected $_field = 'service_id,nums,price,discount';
 
     /**
      * 默认排序规则
      * @var string
      */
-    // protected $_order = '';
+    protected $_order = 'nums asc';
 
     // 指定完整的表名
-    //protected $table = '';
+    protected $table = 'jxh_service_quoted';
 
     // 自动时间维护
     // protected $autoWriteTimestamp = true;
@@ -39,5 +39,4 @@ class Viper extends Model
      * @var false|string
      */
     // protected $updateTime = 'update_time';
-
 }

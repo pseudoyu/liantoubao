@@ -41,12 +41,12 @@ class Manage
     // 读取全局支付列表
     public function getListForPage($args, $limit = 18) {
         $model = $this->model->alias('p')
-                             ->field('p.id,p.title,p.spec,p.nums,p.unit,p.total_fee,p.status,m.nick,m.mobile')
+                             ->field('p.id,p.member_id,p.title,p.spec,p.nums,p.unit,p.total_fee,p.status,p.end_time,m.nick,m.mobile')
                              ->join('member m', 'm.id=p.member_id');
         // 组装筛选条件
         foreach ($args as $key => $arg) {
-            $method = 'search' . parse_name($args, true);
-            if (method_exists($method))
+            $method = 'search' . parse_name($key, true);
+            if (method_exists($this, $method))
                 call_user_func_array([$this, $method], [$model, $arg]);
         }
         return $model->paginate($limit, false, ['var_page' => 'page']);

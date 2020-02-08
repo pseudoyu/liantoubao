@@ -25,13 +25,14 @@ class Common {
      * @return \think\Response
      */
     public function coins() {
-        // 读取总列表
-        $coins = $this->provider->getLists();
+        return output($this->provider->getLists());
+    }
+    /**
+     * 获取币种最新的报价
+     */
+    public function quotes() {
         // 读取最新的单价
-        $prices = $this->provider->getPrice();
-        foreach ($coins as &$coin) {
-            $coin['price'] = isset($prices[$coin['id']]) ? $prices[$coin['id']] : 0;
-        }
-        return output($coins);
+        // $prices = $this->provider->getPrice();
+        return output($this->provider->getPrice());
     }
 }

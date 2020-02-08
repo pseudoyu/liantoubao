@@ -7,8 +7,10 @@ Route::group('wxapi', function () {
     Route::get('/', '');
 
     Route::group('ws', function () {
+        // √ 公用数据
+        Route::get('common', 'index/common/common');
         // √ 币种列表
-        Route::get('coins', 'index/common/coins');
+        // Route::get('coins', 'index/common/coins');
         // √ 单币曲线
         Route::get('single_coin', 'index/common/single_coin');
         // √ 单币涨跌信息
@@ -16,11 +18,11 @@ Route::group('wxapi', function () {
         // √ 热力图
         Route::get('heat_map', 'index/common/heat_map');
         // √ 格式化币种列表
-        Route::get('format_coins', 'index/common/format_coins');
+        // Route::get('format_coins', 'index/common/format_coins');
         // √ 币种即时报价
         Route::get('quotes', 'index/common/quotes');
         // √ 交易所列表
-        Route::get('exchange', 'index/common/exchange');
+        // Route::get('exchange', 'index/common/exchange');
         // √ 排行榜
         Route::get('top_rank', 'index/trade/top_rank');
     });
@@ -40,9 +42,17 @@ Route::group('wxapi', function () {
     // 排行榜列表
     Route::get('ranking', '');
     Route::group('', function () {
+        Route::group('payment', function () {
+            // 会员报价数据
+            Route::get('viper', 'index/payment/services?id=1');
+            // 短信包报价
+            Route::get('sms', 'index/payment/services?id=2');
+        });
         Route::group('member',function() {
             // √ 更新用户信息
             Route::post('update', 'index/member/update');
+            // 设置货币类型
+            Route::post('update_coin', 'index/member/update_coin');
             // √ 更新头像
             Route::post('avatar', 'index/member/avatar');
             // √ 关注用户
@@ -51,7 +61,6 @@ Route::group('wxapi', function () {
             Route::get('cancel_follow', 'index/member/cancel_follow');
             // √ 关注列表
             Route::get('follow_list', 'index/member/follow_list');
-
         });
         Route::group('trades',function() {
             // √ 新增交易
@@ -79,6 +88,5 @@ Route::group('wxapi', function () {
 
         });
     })->middleware('MemberLogin');
-
 });
 

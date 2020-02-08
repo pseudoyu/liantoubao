@@ -16,7 +16,7 @@ class Member extends Model
      * 默认字段
      * @var string|array
      */
-    protected $_field = 'id,open_id,nick,avatar,mobile,viper,vip_expire,create_time';
+    protected $_field = 'id,open_id,nick,avatar,mobile,viper,vip_expire,create_time,coin';
 
     /**
      * 默认排序规则
