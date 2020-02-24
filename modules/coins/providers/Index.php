@@ -75,6 +75,15 @@ class Index
             return Change::order('timer desc')->group('id')->column('unit_price', 'id');
         });
     }
+    public function getTimerPrice($timer) {
+        $cache = Cache::get('coin_price_timer_'.$timer);
+        if($cache) {
+            return $cache;
+        }
+        $data = Change::where('timer', '<=', $timer)->order('timer desc')->group('id')->column('unit_price', 'id');
+        Cache::set('coin_price_timer_'.$timer, $data);
+        return $data;
+    }
     public function getCoinPrice($coin_id) {
         if(Cache::get('coin_new_'.$coin_id)) {
             return Cache::get('coin_new_'.$coin_id);
@@ -98,4 +107,20 @@ class Index
     public function getOneCoinFirstPrice($coin_id) {
         return Change::where('id',$coin_id)->where('timer','>',strtotime(date('Y-m-d')))->order('timer asc')->find();
     }
+    public function getTimerCoinFuture($coin_id, $start_time, $end_time) {
+        $start_price = Change::where('id',$coin_id)->where('timer','>=',$start_time)->where('timer','<',$end_time)->order('timer asc')->value('unit_price');
+        $end_price = Change::where('id',$coin_id)->where('timer','>=',$start_time)->where('timer','<',$end_time)->order('timer desc')->value('unit_price');
+        $max_price = Change::where('id',$coin_id)->where('timer','>=',$start_time)->where('timer','<',$end_time)->max('unit_price');
+        $min_price = Change::where('id',$coin_id)->where('timer','>=',$start_time)->where('timer','<',$end_time)->min('unit_price');
+        $data = [
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'start_price' => $start_price ? $start_price : 0,
+            'end_price' => $end_price ? $end_price : 0,
+            'max_price' => $max_price ? $max_price : 0,
+            'min_price' => $min_price ? $min_price : 0,
+        ];
+        return $data;
+    }
+
 }

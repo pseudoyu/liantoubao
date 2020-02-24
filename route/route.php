@@ -17,6 +17,7 @@ Route::group('wxapi', function () {
         Route::get('coin_info', 'index/common/coin_info');
         // √ 热力图
         Route::get('heat_map', 'index/common/heat_map');
+        Route::get('k_line', 'index/common/k_line');
         // √ 格式化币种列表
         // Route::get('format_coins', 'index/common/format_coins');
         // √ 币种即时报价
@@ -85,8 +86,9 @@ Route::group('wxapi', function () {
             Route::get('my_income_time', 'index/trade/my_income_time');
             // 排名缓存
             Route::get('rank_cache', 'index/trade/rank_cache');
+            // 关注用户信息
+            Route::get('follow_user_info', 'index/trade/follow_user_info');
 
         });
     })->middleware('MemberLogin');
 });
-

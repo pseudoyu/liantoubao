@@ -2,6 +2,7 @@
 
 namespace app\index\controller;
 
+use Cassandra\Date;
 use mod\coins\providers\Index;
 use think\Controller;
 use mod\coins\providers\Index as Coins;
@@ -129,5 +130,107 @@ class Common extends Controller
             ];
         }
         return output($map);
+    }
+    public function k_line(Request $request) {
+        $type_array = ['hour', 'day', 'week', 'month'];
+        $type = $request->type;
+        $coin_id = $request->coin_id;
+        if ( ! $type || ! $coin_id || !in_array($type, $type_array)) {
+            return wrong('参数错误');
+        }
+        switch ($type) {
+            case 'hour':
+                $data = self::hour_kline($coin_id);
+                break;
+            case 'day':
+                $data = self::day_kline($coin_id);
+                break;
+            case 'week':
+                $data = self::week_kline($coin_id);
+                break;
+            case 'month':
+                $data = self::month_kline($coin_id);
+                break;
+        }
+        return output($data);
+    }
+    private function hour_kline($coin_id) {
+        $start_hour = intval(date('H') / 4) * 4; // 获取最新蜡烛块初始时间
+        //   组装最新蜡烛块起止时间戳
+        $start_time = strtotime(date('Y-m-d '.$start_hour. ':00:00'));
+        $data = [];
+        // 共需要组装18个蜡烛块
+        for ($i = 0; $i < 18; $i++) {
+            $cache = Cache::get('kline_hour_'.$coin_id.'_'.$start_time);
+            if ( $cache ) {
+                $data[] = $cache;
+            } else {
+                // 初始化缓存块 14400 = 4 * 60 * 60
+                $end_time = $start_time + 14400;
+                $future_info = app(Index::class)->getTimerCoinFuture($coin_id, $start_time, $end_time);
+                Cache::set('kline_hour_'.$coin_id.'_'.$start_time, $future_info);
+                $data[] = $future_info;
+            }
+            $start_time -= 14400;
+        }
+        return $data;
+    }
+    private function day_kline($coin_id) {
+        //   组装最新蜡烛块起止时间戳
+        $start_time = strtotime(date('Y-m-d 00:00:00'));
+        $data = [];
+        // 共需要组装18个蜡烛块
+        for ($i = 0; $i < 18; $i++) {
+            $cache = Cache::get('kline_day_'.$coin_id.'_'.$start_time);
+            if ( $cache ) {
+                $data[] = $cache;
+            } else {
+                // 初始化缓存块 86400 = 24 * 60 * 60
+                $end_time = $start_time + 86400;
+                $future_info = app(Index::class)->getTimerCoinFuture($coin_id, $start_time, $end_time);
+                Cache::set('kline_day_'.$coin_id.'_'.$start_time, $future_info);
+                $data[] = $future_info;
+            }
+            $start_time -= 86400;
+        }
+        return $data;
+    }
+    private function week_kline($coin_id) {
+        $start_time = strtotime('Sunday -6 day');
+        $data = [];
+        // 共需要组装16个蜡烛块
+        for ($i = 0; $i < 16; $i++) {
+            $cache = Cache::get('kline_week_'.$coin_id.'_'.$start_time);
+            if ( $cache ) {
+                $data[] = $cache;
+            } else {
+                // 初始化缓存块 604800 = 7 * 24 * 60 * 60
+                $end_time = $start_time + 604800;
+                $future_info = app(Index::class)->getTimerCoinFuture($coin_id, $start_time, $end_time);
+                Cache::set('kline_week_'.$coin_id.'_'.$start_time, $future_info);
+                $data[] = $future_info;
+            }
+            $start_time -= 604800;
+        }
+        return $data;
+    }
+    private function month_kline($coin_id) {
+        //   组装最新蜡烛块起止时间戳
+        $start_time = strtotime(date('Y-m-1 00:00:00'));
+        $data = [];
+        // 共需要组装36个蜡烛块
+        for ($i = 0; $i < 36; $i++) {
+            $cache = Cache::get('kline_month_'.$coin_id.'_'.$start_time);
+            if ( $cache ) {
+                $data[] = $cache;
+            } else {
+                $end_time = strtotime(date('Y-m-d H:i:s', $start_time) .' +1 month');
+                $future_info = app(Index::class)->getTimerCoinFuture($coin_id, $start_time, $end_time);
+                Cache::set('kline_month_'.$coin_id.'_'.$start_time, $future_info);
+                $data[] = $future_info;
+            }
+            $start_time = strtotime(date('Y-m-d H:i:s', $start_time) .' -1 month');
+        }
+        return $data;
     }
 }

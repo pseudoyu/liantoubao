@@ -90,4 +90,7 @@ class Member {
         }
         return output($follow);
     }
+    public function follow_user_info(Request $request) {
+
+    }
 }

@@ -68,7 +68,8 @@ class Coins
                 'member_id' => $data['member_id'],
                 'coin_id' => $data['coin_id'],
                 'nums' => $data['nums'],
-                'costs' => $data['unit_price'] * $data['nums'],
+                'costs' => $data['coin_price'] * $data['nums'],
+                'act_costs' => $data['coin_price'] * $data['nums'],
                 'buy_number' => $data['nums'],
                 'sell_number' => 0,
                 'sell_income' => 0,
@@ -78,13 +79,16 @@ class Coins
         if($data['act'] == 1) {
             $modify_info = [
                 'nums' => $coin_info['nums'] + $data['nums'],
-                'costs' => $coin_info['costs'] + $data['unit_price'] * $data['nums'],
+                'costs' => $coin_info['costs'] + $data['coin_price'] * $data['nums'],
+                'act_costs' => $coin_info['act_costs'] + $data['coin_price'] * $data['nums'],
                 'buy_number' => $coin_info['buy_number'] + $data['nums'],
             ];
         } else {
+            $act_costs = app(Trades::class)->sellCoin($data['member_id'], $data['coin_id'], $data['nums']);
             $modify_info = [
                 'nums' => $coin_info['nums'] - $data['nums'],
-                'sell_income' => $coin_info['sell_income'] + $data['unit_price'] * $data['nums'],
+                'act_costs' => $coin_info['act_costs'] - $act_costs,
+                'sell_income' => $coin_info['sell_income'] + $data['coin_price'] * $data['nums'],
                 'sell_number' => $coin_info['sell_number'] + $data['nums'],
             ];
             if($modify_info['nums'] < 0) {

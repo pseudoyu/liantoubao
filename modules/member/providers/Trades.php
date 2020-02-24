@@ -4,6 +4,8 @@ namespace mod\member\providers;
 /**
  * 会员持有币种相关业务逻辑
  */
+
+use app\http\exception\Error;
 use mod\member\model\Trades as Model;
 // use mod\common\traits\BaseProviders;
 
@@ -43,12 +45,42 @@ class Trades
         return $this->model->orderOrDef('id desc')->getOnly($condition);
     }
     public function getLists($condition) {
-        $field = 'id, coin_id, nums, unit_price, act, exchange_id, create_time';
+        $field = 'id, coin_id, nums, coin_unit, unit_price, coin_price, act, exchange_id, create_time';
         return $this->model->getListForPage($condition, 15, $field, 'id desc');
     }
     public function getList($condition) {
-        $field = 'id, coin_id, nums, unit_price, act, exchange_id, create_time';
-        return $this->model->getList($condition, false, $field, 'create_time asc');
+        $field = 'id, coin_id, nums, coin_unit, unit_price, coin_price, act, exchange_id, create_time';
+        return $this->model->getList($condition, false, $field, 'create_time asc, id asc');
+    }
+    public function sellCoin($member_id, $coin_id, $sell_number) {
+        $trade_list = $this->model->where('member_id', $member_id)->where('coin_id', $coin_id)->where('act', 1)->where('is_sell', 0)->order('create_time asc')->select();
+        if( ! $trade_list) {
+            throw new Error('系统异常');
+        }
+        $act_costs = 0;
+        foreach ($trade_list as $trade) {
+            $no_sell = $trade['nums'] - $trade['sell_nums'];
+            if($no_sell < $sell_number) {
+                $act_costs += $trade['coin_price'] * $no_sell;
+                $update = [
+                    'sell_nums' => $trade['nums'],
+                    'is_sell' => 1,
+                ];
+                $this->model->where('id', $trade['id'])->update($update);
+                $sell_number -= $no_sell;
+            } else {
+                $act_costs += $trade['coin_price'] * $sell_number;
+                $update = [
+                    'sell_nums' => $sell_number,
+                ];
+                if($no_sell == $sell_number) {
+                    $update['is_sell'] = 1;
+                }
+                $this->model->where('id', $trade['id'])->update($update);
+                break;
+            }
+        }
+        return $act_costs;
     }
     // 计算单币收益数据
     public function calcCoinIncome($coin_id) {

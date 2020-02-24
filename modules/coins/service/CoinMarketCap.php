@@ -105,6 +105,60 @@ class CoinMarketCap {
                                     Cache::set('coin_24h_min_'.$id, $min_price['unit_price'], 24 * 60 * 60 );
                                 }
                             }
+                            // 更新K线缓存数据
+                            $kline_type = ['hour', 'day', 'week', 'month'];
+                            foreach ($kline_type as $k_type) {
+                                switch ($k_type) {
+                                    case 'hour':
+                                        $kline_start_time = strtotime(date('Y-m-d '. intval(date('H') / 4) * 4 .':00:00'));
+                                        break;
+                                    case 'day':
+                                        $kline_start_time = strtotime(date('Y-m-d 00:00:00'));
+                                        break;
+                                    case 'week':
+                                        $kline_start_time = strtotime('Sunday -6 day');
+                                        break;
+                                    case 'month':
+                                        $kline_start_time = strtotime(date('Y-m-1 00:00:00'));
+                                        break;
+                                }
+                                $kline_cache = Cache::get('kline_'. $k_type .'_'.$id.'_'.$kline_start_time);
+                                if ( $kline_cache ) {
+                                    $kline_cache_update = [
+                                        'start_time' => $kline_cache['start_time'],
+                                        'end_time' => $kline_cache['end_time'],
+                                        'start_price' => $kline_cache['start_price'],
+                                        'end_price' => $unit_price,
+                                        'max_price' => $kline_cache['max_price'] > $unit_price ? $kline_cache['max_price'] : $unit_price,
+                                        'min_price' => $kline_cache['min_price'] < $unit_price ? $kline_cache['min_price'] : $unit_price,
+                                    ];
+                                } else {
+                                    switch ($k_type) {
+                                        case 'hour':
+                                            $kline_end_time = $kline_start_time + 14400;
+                                            break;
+                                        case 'day':
+                                            $kline_end_time = $kline_start_time + 86400;
+                                            break;
+                                        case 'week':
+                                            $kline_end_time = $kline_start_time + 604800;
+                                            break;
+                                        case 'month':
+                                            $kline_end_time = strtotime(date('Y-m-d H:i:s', $kline_start_time) .' +1 month');
+                                            break;
+                                    }
+                                    $kline_cache_update = [
+                                        'start_time' => $kline_start_time,
+                                        'end_time' => $kline_end_time,
+                                        'start_price' => $unit_price,
+                                        'end_price' => $unit_price,
+                                        'max_price' => $unit_price,
+                                        'min_price' => $unit_price,
+                                    ];
+                                }
+                                Cache::set('kline_'. $k_type .'_'.$id.'_'.$kline_start_time, $kline_cache_update);
+                            }
+
                         }
                         // 写入数据库
                         (new Change)->saveAll($data, false);

@@ -40,6 +40,14 @@ class Change extends Model
      */
     // protected $updateTime = 'update_time';
     public function searchTimerAttr($query, $val) {
-        $query->where('timer','>', trim($val));
+        if( ! is_array($val)) {
+            $query->where('timer','>', trim($val));
+        } else {
+            $query->where('timer','>', trim($val['start_time']))->where('timer','<', trim($val['end_time']));
+        }
+
+    }
+    public function searchIdAttr($query, $val) {
+        $query->where('id', trim($val));
     }
 }
