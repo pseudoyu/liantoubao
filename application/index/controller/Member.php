@@ -25,6 +25,13 @@ class Member {
         return $this->provider->updateInfo($request->uid, $data)
             ? complete('修改成功') : wrong('修改失败');
     }
+    // 设置权限
+    public function update_permission(Request $request) {
+        $permission = $request->permission;
+        $permission = in_array($permission, [1, 2, 3]) === false ? 1 : $permission;
+        return $this->provider->updateInfo($request->uid, compact('permission'))
+            ? complete('修改成功') : wrong('修改失败');
+    }
     // 设置货币类型
     public function update_coin(Request $request) {
         $coin = strtoupper($request->put('coin', 'usd'));
@@ -56,14 +63,14 @@ class Member {
             return wrong('关注对象不存在');
         }
         // 检查是否是会员
-        $user_info = $this->provider->getByUid($uid);
-        if ($user_info['viper'] < 1) {
-            return wrong('无权限');
-        } else {
-            if($user_info['vip_expire'] > 0 && $user_info['vip_expire'] < time()) {
-                return wrong('无权限');
-            }
-        }
+//        $user_info = $this->provider->getByUid($uid);
+//        if ($user_info['viper'] < 1) {
+//            return wrong('无权限');
+//        } else {
+//            if($user_info['vip_expire'] > 0 && $user_info['vip_expire'] < time()) {
+//                return wrong('无权限');
+//            }
+//        }
         // 关注
         return app(Follow::class)->follow($uid, $object_id) ? complete('关注成功') : wrong('关注失败');
     }

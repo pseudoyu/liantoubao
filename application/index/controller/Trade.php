@@ -139,15 +139,15 @@ class Trade {
         return output($info);
     }
     public function update_limit(Request $request) {
-        if( ! $request->coin_id || $request->loss_limit > 100) {
+        if( ! $request->coin_id) {
             return wrong('参数错误');
         }
-        $coin_price_array = app(\mod\coins\providers\Index::class)->getPrice();
-        if( ! array_key_exists($request->coin_id, $coin_price_array)) {
-            return wrong('币价接口异常');
-        }
+//        $coin_price_array = app(\mod\coins\providers\Index::class)->getPrice();
+//        if( ! array_key_exists($request->coin_id, $coin_price_array)) {
+//            return wrong('币价接口异常');
+//        }
 
-        $coin_price = $coin_price_array[$request->coin_id];
+//        $coin_price = $coin_price_array[$request->coin_id];
 
         $member_coin_info = app(MemberCoins::class)->findOne($request->uid,$request->coin_id);
         if( ! $member_coin_info) {
@@ -166,14 +166,13 @@ class Trade {
             ];
         }
         $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
-        dump($coin_limit_cache);
         if( ! $coin_limit_cache) {
             $coin_limit_cache = [
                 'profit' => [],
                 'loss' => [],
             ];
         }
-        $profit_limit = $request->profit_limit ? sprintf("%.5f",(1 + ($request->profit_limit / 100)) * $coin_price) : 0;
+        $profit_limit = $request->profit_limit ? sprintf("%.5f",$request->profit_limit) : 0;
         // 清除原有缓存
         if( $coin_limit_cache['profit'] && $member_coin_info['profit_limit'] > 0 &&  $member_coin_info['sms'] == 0) {
             if( array_key_exists(sprintf("%.5f",$member_coin_info['profit_limit']), $coin_limit_cache['profit'])) {
@@ -193,7 +192,7 @@ class Trade {
         } else {
             $coin_limit_cache['profit'][$profit_limit] = [$request->uid];
         }
-        $loss_limit = $request->loss_limit ? sprintf("%.5f",(1 - ($request->loss_limit / 100) ) * $coin_price) : 0;
+        $loss_limit = $request->loss_limit ? sprintf("%.5f",$request->loss_limit) : 0;
         // 清除原有缓存
         if( $coin_limit_cache['loss'] && $member_coin_info['loss_limit'] > 0 &&  $member_coin_info['sms'] == 0) {
             if (array_key_exists(sprintf("%.5f",$member_coin_info['loss_limit']), $coin_limit_cache['loss'])) {
@@ -220,6 +219,9 @@ class Trade {
             'sms' => 0,
         ];
         return app(MemberCoins::class)->update_limit($request->uid,$request->coin_id,$data) ? complete('更新成功') : wrong('更新失败');;
+    }
+    public function my_limit(Request $request) {
+
     }
     public function coin_count(Request $request) {
         if( ! $request->coin_id) {
@@ -251,7 +253,7 @@ class Trade {
             throw new Error('数据接口异常');
         }
         $price = $coin_price * $coin_info['nums'];
-        $income_rate = ( $price - $coin_info['costs'] + $coin_info['sell_income'] ) / $coin_info['costs'];
+        $income_rate = $coin_info['costs'] ? ( $price - $coin_info['costs'] + $coin_info['sell_income'] ) / $coin_info['costs'] : 0;
         $coin_info['coin_price'] = $coin_price;
         $coin_info['price'] = $price;
         $coin_info['having_income'] = $price - $coin_info['costs'];
@@ -331,10 +333,10 @@ class Trade {
         if( ! $member_id) {
             return wrong('参数错误');
         }
-        $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
-        if( ! $is_follow) {
-            return wrong('无权限查看');
-        }
+//        $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
+//        if( ! $is_follow) {
+//            return wrong('无权限查看');
+//        }
         $rank = Cache::get('coin_rank');
         if( ! $rank) {
             $rank = self::rank_cache();
@@ -397,10 +399,20 @@ class Trade {
     public function my_coin(Request $request) {
         $member_id = $request->member_id ? $request->member_id : $request->uid;
         if($member_id != $request->uid) {
-            // 检查是否关注
-            $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
-            if( ! $is_follow) {
-                return wrong('无权限查看');
+            // 检查用户配置的权限
+            $user_info = app(\mod\member\providers\Index::class)->getByUid($member_id);
+            if( ! $user_info) {
+                return wrong('用户不存在');
+            }
+            if($user_info['permission'] == 2) {
+                // 检查是否关注
+                $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
+                if( ! $is_follow) {
+                    return wrong('用户设置仅关注后可查看');
+                }
+            }
+            if($user_info['permission'] == 3) {
+                return wrong('用户设置仅自己可看');
             }
         }
         $my_coin = [];
@@ -415,10 +427,20 @@ class Trade {
     public function has_coin_percent(Request $request) {
         $member_id = $request->member_id ? $request->member_id : $request->uid;
         if($member_id != $request->uid) {
-            // 检查是否关注
-            $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
-            if( ! $is_follow) {
-                return wrong('无权限查看');
+            // 检查用户配置的权限
+            $user_info = app(\mod\member\providers\Index::class)->getByUid($member_id);
+            if( ! $user_info) {
+                return wrong('用户不存在');
+            }
+            if($user_info['permission'] == 2) {
+                // 检查是否关注
+                $is_follow = app(Follow::class)->is_follow($request->uid,$member_id);
+                if( ! $is_follow) {
+                    return wrong('用户设置仅关注后可查看');
+                }
+            }
+            if($user_info['permission'] == 3) {
+                return wrong('用户设置仅自己可看');
             }
         }
         $coin_percent = [];

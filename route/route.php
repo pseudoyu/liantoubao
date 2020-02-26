@@ -54,6 +54,8 @@ Route::group('wxapi', function () {
             Route::post('update', 'index/member/update');
             // 设置货币类型
             Route::post('update_coin', 'index/member/update_coin');
+            // 设置用户信息访问权限
+            Route::post('update_permission', 'index/member/update_permission');
             // √ 更新头像
             Route::post('avatar', 'index/member/avatar');
             // √ 关注用户

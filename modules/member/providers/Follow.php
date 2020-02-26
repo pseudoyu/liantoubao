@@ -37,10 +37,10 @@ class Follow
     }
     public function follow($uid, $object_id) {
         // 检查关注人数
-        $fllow_number = $this->model->getCount(['member_id' => $uid]);
-        if( $fllow_number > env('VIP_MAX_FOLLOW', 8)) {
-            throw new Error('已达关注上限');
-        }
+//        $fllow_number = $this->model->getCount(['member_id' => $uid]);
+//        if( $fllow_number > env('VIP_MAX_FOLLOW', 8)) {
+//            throw new Error('已达关注上限');
+//        }
         // 检查是否已经关注
         $is_follow = $this->model->getCount(['member_id' => $uid, 'object_id' => $object_id]);
         if($is_follow > 0) {
