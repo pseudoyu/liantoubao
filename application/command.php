@@ -15,5 +15,7 @@ return [
     'mod:make:validate'   => 'mod\command\make\Validate',
     'crontab:coin:map'    => 'mod\coins\crontab\Map',
     'crontab:coin:quotes' => 'mod\coins\crontab\Quotes',
+    'crontab:coin:alert' => 'mod\coins\crontab\Alert',
+    'crontab:coin:rank' => 'mod\coins\crontab\Rank',
     'crontab:money:rate'  => 'mod\money\crontab\Rate'
 ];

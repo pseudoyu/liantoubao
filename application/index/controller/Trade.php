@@ -162,19 +162,38 @@ class Trade {
             $member_coin_info = [
                 'profit_limit' => 0,
                 'loss_limit' => 0,
-                'sms' => 0,
+                'profit_sms' => 0,
+                'loss_sms' => 0,
             ];
         }
         $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+        // 检查写入锁
+        if($coin_limit_cache) {
+            if($coin_limit_cache['lock'] == 1) {
+                sleep(1);
+                $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                if($coin_limit_cache['lock'] == 1) {
+                    sleep(1);
+                    $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                    if($coin_limit_cache['lock'] == 1) {
+                        sleep(3);
+                        $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                        // 5秒钟后 依旧处于锁定状态 判断为系统异常 解锁
+                        $coin_limit_cache['lock'] = 0;
+                    }
+                }
+            }
+        }
         if( ! $coin_limit_cache) {
             $coin_limit_cache = [
                 'profit' => [],
                 'loss' => [],
+                'lock' => 0,
             ];
         }
         $profit_limit = $request->profit_limit ? sprintf("%.5f",$request->profit_limit) : 0;
         // 清除原有缓存
-        if( $coin_limit_cache['profit'] && $member_coin_info['profit_limit'] > 0 &&  $member_coin_info['sms'] == 0) {
+        if( $coin_limit_cache['profit'] && $member_coin_info['profit_limit'] > 0 &&  $member_coin_info['profit_sms'] == 0) {
             if( array_key_exists(sprintf("%.5f",$member_coin_info['profit_limit']), $coin_limit_cache['profit'])) {
                 foreach ($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit_limit'])] as $k => $v) {
                     if($v == $request->uid) {
@@ -194,7 +213,7 @@ class Trade {
         }
         $loss_limit = $request->loss_limit ? sprintf("%.5f",$request->loss_limit) : 0;
         // 清除原有缓存
-        if( $coin_limit_cache['loss'] && $member_coin_info['loss_limit'] > 0 &&  $member_coin_info['sms'] == 0) {
+        if( $coin_limit_cache['loss'] && $member_coin_info['loss_limit'] > 0 &&  $member_coin_info['loss_sms'] == 0) {
             if (array_key_exists(sprintf("%.5f",$member_coin_info['loss_limit']), $coin_limit_cache['loss'])) {
                 foreach ($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss_limit'])] as $k => $v) {
                     if ($v == $request->uid) {
@@ -216,7 +235,8 @@ class Trade {
         $data = [
             'profit_limit' => $profit_limit,
             'loss_limit' => $loss_limit,
-            'sms' => 0,
+            'profit_sms' => 0,
+            'loss_sms' => 0,
         ];
         return app(MemberCoins::class)->update_limit($request->uid,$request->coin_id,$data) ? complete('更新成功') : wrong('更新失败');;
     }

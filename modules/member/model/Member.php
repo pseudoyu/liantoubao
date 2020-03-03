@@ -77,7 +77,11 @@ class Member extends Model
     }
     // id筛选
     public function searchIdAttr($query, $val) {
-        $query->where('id', trim($val));
+        if(is_array($val)) {
+            $query->whereIn('id', $val);
+        } else {
+            $query->where('id', trim($val));
+        }
     }
     // 持有币种列表
     public function coins() {

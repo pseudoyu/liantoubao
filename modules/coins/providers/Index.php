@@ -67,6 +67,11 @@ class Index
             return $character_list;
          });
     }
+    public function getIdCode() {
+        return Cache::remember('CoinIdCode', function () {
+            return $this->model->column('code', 'id');
+        });
+    }
     /**
      * 获取币当前单价
      */

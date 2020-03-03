@@ -4,7 +4,7 @@
  * @author Lazy 2019-11-20
  */
 Route::group('wxapi', function () {
-    Route::get('/', '');
+    Route::get('/', 'index/index/index');
 
     Route::group('ws', function () {
         // √ 公用数据

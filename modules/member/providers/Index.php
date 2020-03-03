@@ -154,6 +154,9 @@ class Index
     public function getByUid($uid) {
         return $this->model->getOnly(['id' => $uid]);
     }
+    public function getByUids($uids) {
+        return $this->model->whereIn('id', $uids)->select();
+    }
     public function getAll() {
         return $this->model->getList([], false)->toArray();
     }
