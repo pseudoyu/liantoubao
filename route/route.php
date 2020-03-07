@@ -14,7 +14,7 @@ Route::group('wxapi', function () {
         // √ 单币曲线
         Route::get('single_coin', 'index/common/single_coin');
         // √ 单币涨跌信息
-        Route::get('coin_info', 'index/common/coin_info');
+        Route::get('coin_info', 'index/common/coin_info')->middleware('MemberLogin');
         // √ 热力图
         Route::get('heat_map', 'index/common/heat_map');
         Route::get('k_line', 'index/common/k_line');
@@ -76,6 +76,12 @@ Route::group('wxapi', function () {
             Route::get('coin_trade_list', 'index/trade/coin_trade_list');
             // √ 更新阈值
             Route::post('update_limit', 'index/trade/update_limit');
+            // 阈值列表
+            Route::get('my_limit', 'index/trade/my_limit');
+            // 删除阈值
+            Route::get('remove_limit', 'index/trade/remove_limit');
+            // 测试 阈值缓存
+            Route::get('limit_cache', 'index/trade/limit_cache');
             // √ 单币详情
             Route::get('single_coin_info', 'index/trade/single_coin_info');
             // 持币比例

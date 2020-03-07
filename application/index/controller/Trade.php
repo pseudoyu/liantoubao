@@ -2,6 +2,7 @@
 namespace app\index\controller;
 
 use app\http\exception\Error;
+use mod\member\providers\Alert;
 use mod\member\providers\Follow;
 use mod\member\providers\Trades;
 use mod\money\providers\Money;
@@ -149,22 +150,14 @@ class Trade {
 
 //        $coin_price = $coin_price_array[$request->coin_id];
 
-        $member_coin_info = app(MemberCoins::class)->findOne($request->uid,$request->coin_id);
-        if( ! $member_coin_info) {
-            $insert_coin_info = [
-                'member_id' => $request->uid,
-                'coin_id' => $request->coin_id,
-                'act' => 1,
-                'nums' => 0,
-                'coin_price' => 0,
-            ];
-            app(MemberCoins::class)->update($insert_coin_info);
+        $member_alert = app(Alert::class)->findUerCoinAlert($request->uid, $request->coin_id);
+        if( ! $member_alert) {
             $member_coin_info = [
-                'profit_limit' => 0,
-                'loss_limit' => 0,
-                'profit_sms' => 0,
-                'loss_sms' => 0,
+                'profit' => [],
+                'loss' => [],
             ];
+        } else {
+            $member_coin_info = $member_alert;
         }
         $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
         // 检查写入锁
@@ -191,17 +184,24 @@ class Trade {
                 'lock' => 0,
             ];
         }
+        $insert_data = [];
         $profit_limit = $request->profit_limit ? sprintf("%.5f",$request->profit_limit) : 0;
+        $insert_data[] = [
+            'member_id' => $request->uid,
+            'coin_id' => $request->coin_id,
+            'alert_type' => 1,
+            'alert_value' => $profit_limit,
+        ];
         // 清除原有缓存
-        if( $coin_limit_cache['profit'] && $member_coin_info['profit_limit'] > 0 &&  $member_coin_info['profit_sms'] == 0) {
-            if( array_key_exists(sprintf("%.5f",$member_coin_info['profit_limit']), $coin_limit_cache['profit'])) {
-                foreach ($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit_limit'])] as $k => $v) {
+        if( $coin_limit_cache['profit'] && $member_coin_info['profit']) {
+            if( array_key_exists(sprintf("%.5f",$member_coin_info['profit']['alert_value']), $coin_limit_cache['profit'])) {
+                foreach ($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit']['alert_value'])] as $k => $v) {
                     if($v == $request->uid) {
-                        unset($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit_limit'])][$k]);
+                        unset($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit']['alert_value'])][$k]);
                     }
                 }
                 // 重置数组起始值
-                $coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit_limit'])] = array_values($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit_limit'])]);
+                $coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit']['alert_value'])] = array_values($coin_limit_cache['profit'][sprintf("%.5f",$member_coin_info['profit']['alert_value'])]);
             }
             //$coin_limit_cache['profit'][$profit_limit] = array_merge(array_diff($coin_limit_cache['profit'][$profit_limit], [$request->uid]));
         }
@@ -212,17 +212,24 @@ class Trade {
             $coin_limit_cache['profit'][$profit_limit] = [$request->uid];
         }
         $loss_limit = $request->loss_limit ? sprintf("%.5f",$request->loss_limit) : 0;
-        // 清除原有缓存
-        if( $coin_limit_cache['loss'] && $member_coin_info['loss_limit'] > 0 &&  $member_coin_info['loss_sms'] == 0) {
-            if (array_key_exists(sprintf("%.5f",$member_coin_info['loss_limit']), $coin_limit_cache['loss'])) {
-                foreach ($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss_limit'])] as $k => $v) {
-                    if ($v == $request->uid) {
-                        unset($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss_limit'])][$k]);
+        $insert_data[] = [
+            'member_id' => $request->uid,
+            'coin_id' => $request->coin_id,
+            'alert_type' => 2,
+            'alert_value' => $loss_limit,
+        ];
+        /// 清除原有缓存
+        if( $coin_limit_cache['loss'] && $member_coin_info['loss']) {
+            if( array_key_exists(sprintf("%.5f",$member_coin_info['loss']['alert_value']), $coin_limit_cache['loss'])) {
+                foreach ($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss']['alert_value'])] as $k => $v) {
+                    if($v == $request->uid) {
+                        unset($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss']['alert_value'])][$k]);
                     }
                 }
                 // 重置数组起始值
-                $coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss_limit'])] = array_values($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss_limit'])]);
+                $coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss']['alert_value'])] = array_values($coin_limit_cache['loss'][sprintf("%.5f",$member_coin_info['loss']['alert_value'])]);
             }
+            //$coin_limit_cache['profit'][$profit_limit] = array_merge(array_diff($coin_limit_cache['profit'][$profit_limit], [$request->uid]));
         }
         // 新增缓存
         if(array_key_exists($loss_limit,$coin_limit_cache['loss'])) {
@@ -232,17 +239,70 @@ class Trade {
         }
         Cache::set('coin_limit_'.$request->coin_id, $coin_limit_cache);
         // 更新数据库
-        $data = [
-            'profit_limit' => $profit_limit,
-            'loss_limit' => $loss_limit,
-            'profit_sms' => 0,
-            'loss_sms' => 0,
-        ];
-        return app(MemberCoins::class)->update_limit($request->uid,$request->coin_id,$data) ? complete('更新成功') : wrong('更新失败');;
+        if( $member_alert ) {
+            // 删除已有存储
+            app(Alert::class)->updateCoinAlert($request->uid, $request->coin_id);
+        }
+        return app(Alert::class)->insertAlert($insert_data) ? complete('更新成功') : wrong('更新失败');;
     }
     public function my_limit(Request $request) {
-
+        $data = app(Alert::class)->findByUid($request->uid);
+        return output($data);
     }
+    public function limit_cache(Request $request) {
+        $data = $coin_limit_cache = Cache::get('member_alert');
+        return output($data);
+    }
+    public function remove_limit(Request $request) {
+        $limit_id = $request->id;
+        if( ! $limit_id) {
+            return wrong('参数错误');
+        }
+        $alert_info = app(Alert::class)->findAlert($limit_id, $request->uid);
+        if( ! $alert_info) {
+            return wrong('预警不存在');
+        }
+        if( $alert_info['alert_type'] == 1) {
+            $command = 'profit';
+        } else {
+            $command = 'loss';
+        }
+
+        $coin_limit_cache = Cache::get('coin_limit_'.$alert_info['coin_id']);
+        if($coin_limit_cache) {
+            if($coin_limit_cache['lock'] == 1) {
+                sleep(1);
+                $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                if($coin_limit_cache['lock'] == 1) {
+                    sleep(1);
+                    $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                    if($coin_limit_cache['lock'] == 1) {
+                        sleep(3);
+                        $coin_limit_cache = Cache::get('coin_limit_'.$request->coin_id);
+                        // 5秒钟后 依旧处于锁定状态 判断为系统异常 解锁
+                        $coin_limit_cache['lock'] = 0;
+                    }
+                }
+            }
+        }
+        if( $coin_limit_cache) {
+            // 清除原有缓存
+            if( $coin_limit_cache[$command]) {
+                if( array_key_exists(sprintf("%.5f",$alert_info['alert_value']), $coin_limit_cache[$command])) {
+                    foreach ($coin_limit_cache[$command][sprintf("%.5f",$alert_info['alert_value'])] as $k => $v) {
+                        if($v == $request->uid) {
+                            unset($coin_limit_cache[$command][sprintf("%.5f",$alert_info['alert_value'])][$k]);
+                        }
+                    }
+                    // 重置数组起始值
+                    $coin_limit_cache[$command][sprintf("%.5f",$alert_info['alert_value'])] = array_values($coin_limit_cache[$command][sprintf("%.5f",$alert_info['alert_value'])]);
+                }
+            }
+            Cache::set('coin_limit_'.$alert_info['coin_id'], $coin_limit_cache);
+        }
+        return app(Alert::class)->delAlert($limit_id, $request->uid) ? complete('删除成功') : wrong('删除失败');;
+    }
+
     public function coin_count(Request $request) {
         if( ! $request->coin_id) {
             return wrong('参数错误');
@@ -383,7 +443,7 @@ class Trade {
             $act_costs += $coin['act_costs'];
         }
 
-        $having = $total_price - $costs;
+        $having = $total_price - $act_costs;
         //原有持有收益率算法
         // $rate = ( $having + $sell ) / $costs;
         // 202002因客户需求变更 更新收益率算法
@@ -409,10 +469,14 @@ class Trade {
         $data = self::calc_all_income($coin_info);
         // 计算个人排名
         $rank = Cache::get('coin_rank');
-        $data['rank'] = 0;
+        $data['rank'] = 100;
         if ($rank && array_key_exists($request->uid, $rank['data'])) {
-            $my_rank = $rank['data'][$request->uid];
-            $data['rank'] = ( 1 - ($my_rank['rank'] - 1) / ( $rank['count'] - 1 )) * 100;
+            if ($rank['count'] < 2) {
+                $data['rank'] = 100;
+            } else {
+                $my_rank = $rank['data'][$request->uid];
+                $data['rank'] = ( 1 - ($my_rank['rank'] - 1) / ( $rank['count'] - 1 )) * 100;
+            }
         }
         return output($data);
     }
@@ -435,11 +499,30 @@ class Trade {
                 return wrong('用户设置仅自己可看');
             }
         }
+        $alert_cache = Cache::get('member_alert');
+
+        $member_alert_cache = [];
+        if( $alert_cache && array_key_exists($member_id, $alert_cache)) {
+            $member_alert_cache = $alert_cache[$member_id];
+        }
         $my_coin = [];
         $coin_info = app(MemberCoins::class)->findByUid($member_id);
         if( $coin_info) {
             foreach ($coin_info as $coin) {
-                $my_coin[] = self::calc_coin_rate($coin);
+                $coin_info_tmp = self::calc_coin_rate($coin);
+                if($member_id == $request->uid) {
+                    if($member_alert_cache) {
+                        if(in_array($coin_info_tmp['coin_id'], $member_alert_cache)) {
+                            $coin_info_tmp['is_alert'] = 1;
+                        } else {
+                            $coin_info_tmp['is_alert'] = 0;
+                        }
+                    } else {
+                        $coin_info_tmp['is_alert'] = 0;
+                    }
+
+                }
+                $my_coin[] = $coin_info_tmp;
             }
         }
         return output($my_coin);

@@ -12,6 +12,12 @@ class MemberLogin {
         if ( array_key_exists('token',$request->header())) {
             $token = $request->header()['token'];
         } else {
+            $white_list = [
+                'wxapi/ws/coin_info',
+            ];
+            if(in_array($request->pathinfo(), $white_list)) {
+                return $next($request);
+            }
             throw new Error('你还未登陆或者登陆已超时', 1403);
         }
         $key = env('JWT_KEY');

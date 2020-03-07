@@ -2,8 +2,8 @@
 
 namespace app\index\controller;
 
-use Cassandra\Date;
 use mod\coins\providers\Index;
+use mod\member\providers\Alert;
 use think\Controller;
 use mod\coins\providers\Index as Coins;
 use mod\exchange\providers\Index as Exchange;
@@ -49,8 +49,26 @@ class Common extends Controller
     // 读取单币特征值
     public function coin_info(Request $request) {
         $id = $request->coin_id;
+
         if( ! $id) {
             return wrong('参数异常');
+        }
+        if($request->uid) {
+            $member_id = $request->uid;
+            $alert_cache = Cache::get('member_alert');
+            if( $alert_cache && array_key_exists($member_id, $alert_cache)) {
+                if(in_array($id, $alert_cache[$member_id])) {
+                    // 删除缓存
+                    foreach ($alert_cache[$member_id] as $tmp_key => $alert_coin) {
+                        if($alert_coin == $id) {
+                            unset($alert_cache[$member_id][$tmp_key]);
+                        }
+                    }
+                    Cache::set('member_alert', $alert_cache);
+                    // 已读 写数据库
+                    app(Alert::class)->updateCoinView($member_id, $coin_id);
+                }
+            }
         }
         // 24H最大值
         if (Cache::get('coin_24h_max_'.$id) ) {
@@ -152,7 +170,8 @@ class Common extends Controller
                 $data = self::month_kline($coin_id);
                 break;
         }
-        return output($data);
+        // 反序输出
+        return output(array_reverse($data));
     }
     private function hour_kline($coin_id) {
         $start_hour = intval(date('H') / 4) * 4; // 获取最新蜡烛块初始时间

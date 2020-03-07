@@ -31,6 +31,10 @@ class Alert extends Command {
             }
             $time_now = date('Y-m-d H:i:s');
             $coin_code_array = app(Index::class)->getIdCode();
+            $alert_cache = Cache::get('member_alert');
+            if( ! $alert_cache) {
+                $alert_cache = [];
+            }
             foreach ($coin_price_array as $coin_id => $coin_price) {
                 $cache = Cache::get('coin_limit_'.$coin_id);
                 if( ! $cache) {
@@ -56,7 +60,7 @@ class Alert extends Command {
                                     'touser' => $user['open_id'],
                                     'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
                                     // 'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
-                                    'url' => 'https://app.chumuinfo.com/#/pages/quotation/detail?id='.$coin_id,
+                                    'url' => 'https://app.chumuinfo.com/#/pages/wallet/index',
                                     'data' => [
                                         'first' => '您有一个新的阈值提示',
                                         'keyword1' => $user['mobile'] ? $user['mobile'] : '链投宝用户', // 账号ID
@@ -67,6 +71,11 @@ class Alert extends Command {
                                         'remark' => ['请点击进入链投宝查看详细信息','#FF0000'],
                                     ],
                                 ]);
+                                if(array_key_exists($user['id'], $alert_cache)) {
+                                    $alert_cache[$user['id']][] = $coin_id;
+                                } else {
+                                    $alert_cache[$user['id']] = [$coin_id];
+                                }
                                 $update[] = $user['id'];
                             }
                             //unset 缓存
@@ -75,8 +84,8 @@ class Alert extends Command {
                     }
                     // 更新数据表
                     if($update) {
-                        $coin_model = new CoinsModel();
-                        $coin_model->modify(['member_id' => $update, 'coin_id'=> $coin_id], ['profit_sms' => 1]);
+                        $alert_model = new \mod\member\model\Alert();
+                        $alert_model->modify(['member_id' => $update, 'coin_id'=> $coin_id, 'sms' => 0, 'alert_type' => 1], ['sms' => 1]);
                     }
                 }
                 // 循环下阈值
@@ -95,7 +104,7 @@ class Alert extends Command {
                                     'touser' => $user['open_id'],
                                     'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
                                     // 'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
-                                    'url' => 'https://app.chumuinfo.com/#/pages/quotation/detail?id='.$coin_id,
+                                    'url' => 'https://app.chumuinfo.com/#/pages/wallet/index',
                                     'data' => [
                                         'first' => '您有一个新的阈值提示',
                                         'keyword1' => $user['mobile'] ? $user['mobile'] : '链投宝用户', // 账号ID
@@ -106,6 +115,11 @@ class Alert extends Command {
                                         'remark' => ['请点击进入链投宝查看详细信息','#FF0000'],
                                     ],
                                 ]);
+                                if(array_key_exists($user['id'], $alert_cache)) {
+                                    $alert_cache[$user['id']][] = $coin_id;
+                                } else {
+                                    $alert_cache[$user['id']] = [$coin_id];
+                                }
                                 $update[] = $user['id'];
                             }
                             //unset 缓存
@@ -114,12 +128,13 @@ class Alert extends Command {
                     }
                     // 更新数据表
                     if($update) {
-                        $coin_model = new CoinsModel();
-                        $coin_model->modify(['member_id' => $update, 'coin_id'=> $coin_id], ['loss_sms' => 1]);
+                        $alert_model = new \mod\member\model\Alert();
+                        $alert_model->modify(['member_id' => $update, 'coin_id'=> $coin_id, 'sms' => 0, 'alert_type' => 2], ['sms' => 1]);
                     }
                 }
                 $cache['lock'] = 0;
                 Cache::set('coin_limit_'.$coin_id, $cache);
+                Cache::set('member_alert', $alert_cache);
             }
             $output->info('发送用户通知成功');
         } catch (\think\exception\ErrorException $e) {
