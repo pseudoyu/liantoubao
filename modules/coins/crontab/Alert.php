@@ -58,8 +58,8 @@ class Alert extends Command {
                                 $notice = $app->notice;
                                 $messageId = $notice->send([
                                     'touser' => $user['open_id'],
-                                    'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
-                                    // 'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
+                                    // 'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
+                                    'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
                                     'url' => 'https://app.chumuinfo.com/#/pages/wallet/index',
                                     'data' => [
                                         'first' => '您有一个新的阈值提示',
@@ -102,8 +102,8 @@ class Alert extends Command {
                                 $notice = $app->notice;
                                 $messageId = $notice->send([
                                     'touser' => $user['open_id'],
-                                    'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
-                                    // 'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
+                                    // 'template_id' => 'mCDEoNosTR8avwWfWzXCEqKJ-wpZ5pPC8SxhZkAQscI',
+                                    'template_id' => 'HpFbhc4UOPHNyDpsivZwQJuXnebULOQ_drXir23FfPU',
                                     'url' => 'https://app.chumuinfo.com/#/pages/wallet/index',
                                     'data' => [
                                         'first' => '您有一个新的阈值提示',
